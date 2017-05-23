@@ -6,11 +6,10 @@ class DistrictRepository
   attr_reader :districts
   def initialize()
 
-
   end
 
-  def load_data(hash)
-    file_name = hash[:enrollment][:kindergarten]
+  def load_data(args)
+    file_name = args[:enrollment][:kindergarten]
 
     @districts = []
     CSV.foreach(file_name, :headers => true) do |district|

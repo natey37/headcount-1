@@ -5,6 +5,9 @@ class District
     @name = district["Location"]
   end
 
+  def name
+    @name.upcase
+  end
 
 
 end

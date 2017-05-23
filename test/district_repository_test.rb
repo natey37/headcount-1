@@ -52,4 +52,6 @@ class DistrictRepositoryTest < Minitest::Test
     d = district_repository_instance
     assert_equal d.find_all_matching("adams").first.class, District
   end
+
+
 end
