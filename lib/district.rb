@@ -1,8 +1,11 @@
-class District
-  attr_reader :name
+require_relative 'enrollment'
 
-  def initialize(hash)
+class District
+  attr_reader :name, :enrollment
+
+  def initialize(hash, enrollment)
     @name = hash[:name]
+    @enrollment = enrollment
   end
 
   def name

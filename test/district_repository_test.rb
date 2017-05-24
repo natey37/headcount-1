@@ -34,7 +34,7 @@ class DistrictRepositoryTest < Minitest::Test
 
   def test_find_by_name_returns_a_district_object
     d = district_repository_instance
-  
+
     assert_equal d.find_by_name("academy 20").class, District
   end
 
@@ -52,6 +52,18 @@ class DistrictRepositoryTest < Minitest::Test
   def test_find_all_matching_returns_district_objects
     d = district_repository_instance
     assert_equal d.find_all_matching("adams").first.class, District
+  end
+
+  def test_district_repository_creates_enrollent_instance
+    dr = DistrictRepository.new
+      dr.load_data({
+        :enrollment => {
+          :kindergarten => "./data/Kindergartners in full-day program.csv"
+        }
+      })
+      district = dr.find_by_name("ACADEMY 20")
+      assert_equal district.enrollment.kindergarten_participation_in_year(2010),
+                    0.436
   end
 
 

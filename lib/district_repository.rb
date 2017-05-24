@@ -1,26 +1,45 @@
 require_relative 'district'
+require_relative 'enrollment'
 require 'csv'
 require 'pry'
 
 class DistrictRepository
-  attr_reader :districts
+  attr_reader :districts, :district
   def initialize()
 
   end
 
   def load_data(args)
-    file_name = args[:enrollment][:kindergarten]
-
-    data = []
-    CSV.foreach(file_name, :headers => true) do |row|
-      data << row
-    end
+    @district = args[:enrollment][:kindergarten]
     @districts = []
-    district_names = data.map{|row| row[0]}.uniq
+    ke = kindergarten_enrollment
       district_names.each do |name|
-        districts << District.new({:name => name})
+          districts << District.new({:name => name},
+                       Enrollment.new(:name => name,
+                       :kindergarten_participation => ke[name]))
+       end
+  end
+  def collect_data
+    data = []
+      CSV.foreach(district, :headers => true) do |row|
+        data << row
       end
+        return data
+  end
 
+  def district_names
+    collect_data.map{|row| row[0]}.uniq
+  end
+
+  def kindergarten_enrollment
+    enroll = {}
+      district_names.each do |name|
+        enroll[name] = {}
+      end
+      collect_data.each do |row|
+        enroll[row[0]].store(row[1].to_i, row[3].to_f)
+      end
+        return enroll
   end
 
   def find_by_name(name)
