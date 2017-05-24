@@ -2,9 +2,9 @@
 class Enrollment
   attr_reader :name, :kindergarten_participation
 
-  def initialize(district, attendance_hash)
-    @name = district
-    @kindergarten_participation = attendance_hash
+  def initialize(hash)
+    @name = hash[:name]
+    @kindergarten_participation = hash[:kindergarten_participation]
   end
 
   def kindergarten_participation_by_year

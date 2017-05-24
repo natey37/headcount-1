@@ -34,6 +34,7 @@ class DistrictRepositoryTest < Minitest::Test
 
   def test_find_by_name_returns_a_district_object
     d = district_repository_instance
+  
     assert_equal d.find_by_name("academy 20").class, District
   end
 

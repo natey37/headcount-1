@@ -1,4 +1,4 @@
-require './lib/enrollment.rb'
+require_relative 'enrollment'
 require 'csv'
 
 class EnrollmentRepository
@@ -25,12 +25,10 @@ class EnrollmentRepository
         enroll[row[0]].store(row[1].to_i, row[3].to_f)
       end
     @enrollment = []
-    enroll.each do |district, attendance_hash|
-      enrollment << Enrollment.new(district, attendance_hash)
-    end
-
-
-
+      enroll.each do |district, attendance_hash|
+        enrollment << Enrollment.new({:name => district,
+                      :kindergarten_participation => attendance_hash})
+        end
   end
 
   def find_by_name(name)

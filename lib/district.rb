@@ -1,8 +1,8 @@
 class District
   attr_reader :name
 
-  def initialize(district)
-    @name = district["Location"]
+  def initialize(hash)
+    @name = hash[:name]
   end
 
   def name

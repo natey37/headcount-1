@@ -1,4 +1,4 @@
-require './lib/district.rb'
+require_relative 'district'
 require 'csv'
 require 'pry'
 
@@ -11,10 +11,15 @@ class DistrictRepository
   def load_data(args)
     file_name = args[:enrollment][:kindergarten]
 
-    @districts = []
-    CSV.foreach(file_name, :headers => true) do |district|
-      districts << District.new(district)
+    data = []
+    CSV.foreach(file_name, :headers => true) do |row|
+      data << row
     end
+    @districts = []
+    district_names = data.map{|row| row[0]}.uniq
+      district_names.each do |name|
+        districts << District.new({:name => name})
+      end
 
   end
 
