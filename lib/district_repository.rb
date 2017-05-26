@@ -4,42 +4,53 @@ require 'csv'
 require 'pry'
 
 class DistrictRepository
-  attr_reader :districts, :district
+  attr_reader :districts, :district, :highschool_graduation
   def initialize()
 
   end
 
   def load_data(args)
     @district = args[:enrollment][:kindergarten]
+    @highschool_graduation = args[:enrollment][:high_school_graduation]
     @districts = []
     ke = kindergarten_enrollment
-      district_names.each do |name|
+    hg = highschool_graduation_rate
+      district_names(district).each do |name|
           districts << District.new({:name => name},
-                       Enrollment.new(:name => name,
-                       :kindergarten_participation => ke[name]))
+                         Enrollment.new(:name => name,
+                         :kindergarten_participation => ke[name],
+                         :high_school_graduation => hg[name]))
        end
   end
-  def collect_data
+  def collect_data(file)
     data = []
-      CSV.foreach(district, :headers => true) do |row|
+      CSV.foreach(file, :headers => true) do |row|
         data << row
       end
         return data
   end
 
-  def district_names
-    collect_data.map{|row| row[0]}.uniq
+  def highschool_graduation_rate
+    making_hash_of_data(highschool_graduation)
+  end
+
+  def district_names(file)
+    collect_data(file).map{|row| row[0]}.uniq
   end
 
   def kindergarten_enrollment
-    enroll = {}
-      district_names.each do |name|
-        enroll[name] = {}
+    making_hash_of_data(district)
+  end
+
+  def making_hash_of_data(file)
+    hash = {}
+      district_names(file).each do |name|
+        hash[name] = {}
       end
-      collect_data.each do |row|
-        enroll[row[0]].store(row[1].to_i, row[3].to_f)
+      collect_data(file).each do |row|
+        hash[row[0]].store(row[1].to_i, row[3].to_f)
       end
-        return enroll
+        return hash
   end
 
   def find_by_name(name)
