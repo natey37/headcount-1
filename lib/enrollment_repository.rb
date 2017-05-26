@@ -3,32 +3,58 @@ require 'csv'
 
 class EnrollmentRepository
 
-  attr_reader :enrollment
+  attr_reader :enrollment, :district, :highschool_graduation
 
   def initialize
 
   end
 
-  def load_data(hash)
-    file_name = hash[:enrollment][:kindergarten]
+  def load_data(args)
+    @district = args[:enrollment][:kindergarten]
+    @highschool_graduation = args[:enrollment][:high_school_graduation]
+    @enrollment = []
+    ke = kindergarten_enrollment
+    hg = highschool_graduation_rate
+      district_names(district).each do |name|
+          enrollment <<  Enrollment.new(:name => name,
+                         :kindergarten_participation => ke[name],
+                         :high_school_graduation => hg[name])
+       end
+  end
+
+
+  def collect_data(file)
     data = []
-      CSV.foreach(file_name, :headers => true) do |row|
+      CSV.foreach(file, :headers => true) do |row|
         data << row
       end
+        return data
+  end
 
-    names = data.map{|row| row[0]}.uniq
-    enroll = {}
-      names.each do |name|
-        enroll[name] = {}
+  def highschool_graduation_rate
+    making_hash_of_data(highschool_graduation)
+  end
+
+  def district_names(file)
+    collect_data(file).map{|row| row[0]}.uniq
+  end
+
+  def kindergarten_enrollment
+    making_hash_of_data(district)
+  end
+
+  def district_names_as_hash_keys(file)
+    names = {}
+    district_names(file).each{|name| names[name] = {}}
+      return names
+  end
+
+  def making_hash_of_data(file)
+      names_with_stats = district_names_as_hash_keys(file)
+      collect_data(file).each do |row|
+        names_with_stats[row[0]].store(row[1].to_i, row[3].to_f)
       end
-      data.each do |row|
-        enroll[row[0]].store(row[1].to_i, row[3].to_f)
-      end
-    @enrollment = []
-      enroll.each do |district, attendance_hash|
-        enrollment << Enrollment.new({:name => district,
-                      :kindergarten_participation => attendance_hash})
-        end
+        return names_with_stats
   end
 
   def find_by_name(name)

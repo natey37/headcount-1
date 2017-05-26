@@ -69,7 +69,7 @@ class HeadCountAnalyst
       elsif district_area[:across].class == Array
         percentage_of_true(kinder_part_vs_hs_grad_by_specific_districts(district_area[:across]))
       else
-        within_correlation_range(kindergarten_participation_against_high_school_graduation(district_area))
+        within_correlation_range(kindergarten_participation_against_high_school_graduation(district_area[:for]))
       end
 
   end
@@ -90,7 +90,7 @@ class HeadCountAnalyst
     kinder_part_vs_hs_grad_percentage = []
     @dr_instance.districts.each do |district|
       if district.name != "COLORADO"
-        hs_grad_percentage <<
+        kinder_part_vs_hs_grad_percentage <<
         kindergarten_participation_against_high_school_graduation(district.name)
       end
     end

@@ -42,15 +42,18 @@ class DistrictRepository
     making_hash_of_data(district)
   end
 
+  def district_names_as_hash_keys(file)
+    names = {}
+    district_names(file).each{|name| names[name] = {}}
+      return names
+  end
+
   def making_hash_of_data(file)
-    hash = {}
-      district_names(file).each do |name|
-        hash[name] = {}
-      end
+      names_with_stats = district_names_as_hash_keys(file)
       collect_data(file).each do |row|
-        hash[row[0]].store(row[1].to_i, row[3].to_f)
+        names_with_stats[row[0]].store(row[1].to_i, row[3].to_f)
       end
-        return hash
+        return names_with_stats
   end
 
   def find_by_name(name)

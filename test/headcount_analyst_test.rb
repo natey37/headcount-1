@@ -60,7 +60,6 @@ class HeadCountAnalystTest < Minitest::Test
   end
 
   def test_method_kindergarten_participation_correlates_with_high_school_graduation
-    binding.pry
     assert_equal set_up
                 .kindergarten_participation_correlates_with_high_school_graduation(:across => ["academy 20", 'ADAMS-ARAPAHOE 28J']),
                 false
