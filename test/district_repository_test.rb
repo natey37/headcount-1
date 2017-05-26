@@ -10,7 +10,8 @@ class DistrictRepositoryTest < Minitest::Test
     dr = DistrictRepository.new
     dr.load_data({
       :enrollment => {
-        :kindergarten => "./data/Kindergartners in full-day program.csv"
+        :kindergarten => "./data/Kindergartners in full-day program.csv",
+        :high_school_graduation => "./data/High school graduation rates.csv"
       }
       })
         return dr
@@ -55,16 +56,33 @@ class DistrictRepositoryTest < Minitest::Test
   end
 
   def test_district_repository_creates_enrollent_instance
-    dr = DistrictRepository.new
-      dr.load_data({
-        :enrollment => {
-          :kindergarten => "./data/Kindergartners in full-day program.csv"
-        }
-      })
-      district = dr.find_by_name("ACADEMY 20")
+      d = district_repository_instance
+      district = d.find_by_name("ACADEMY 20")
       assert_equal district.enrollment.kindergarten_participation_in_year(2010),
                     0.436
+
   end
 
+  def test_graduation_rate_by_year_returns_the_hs_grad_rate_by_year
+    d = district_repository_instance
+    district = d.find_by_name("academy 20")
+    assert_equal district.enrollment.graduation_rate_by_year,
+                 { 2010 => 0.895,
+                   2011 => 0.895,
+                   2012 => 0.89,
+                   2013 => 0.914,
+                   2014 => 0.898,
+                 }
+
+  end
+
+  def test_graduation_rate_in_year_returns_rate_in_given_rate
+    d = district_repository_instance
+    district = d.find_by_name("adams county 14")
+    assert_equal district.enrollment.graduation_rate_in_year(2014),
+                 0.659
+    assert_nil district.enrollment.graduation_rate_in_year(2001),
+                 nil
+  end
 
 end
