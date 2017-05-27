@@ -1,10 +1,13 @@
 require_relative 'district'
 require_relative 'enrollment'
+require_relative 'statewide_test_repository'
 require 'csv'
 require 'pry'
 
 class DistrictRepository
-  attr_reader :districts, :district, :highschool_graduation
+  attr_reader :districts, :district, :highschool_graduation,
+              :third_grade, :eighth_grade, :math, :writing,
+              :reading
   def initialize()
 
   end
@@ -12,14 +15,24 @@ class DistrictRepository
   def load_data(args)
     @district = args[:enrollment][:kindergarten]
     @highschool_graduation = args[:enrollment][:high_school_graduation]
+    @third_grade = args[:statewide_testing][:third_grade]
+    @eighth_grade = args[:statewide_testing][:eighth_grade]
+    @math = args[:statewide_testing][:math]
+    @writing = args[:statewide_testing][:writing]
+    @reading = args[:statewide_testing][:reading]
+    tests_for_school = StatewideTestRepository.new
+    tests_for_school.load_data([third_grade, eighth_grade,
+                                math, reading, writing])
     @districts = []
     ke = kindergarten_enrollment
     hg = highschool_graduation_rate
       district_names(district).each do |name|
+          testing = tests_for_school.find_by_name(name)
           districts << District.new({:name => name},
                          Enrollment.new(:name => name,
                          :kindergarten_participation => ke[name],
-                         :high_school_graduation => hg[name]))
+                         :high_school_graduation => hg[name]),
+                          testing)
        end
   end
   def collect_data(file)
