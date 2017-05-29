@@ -1,3 +1,4 @@
+require_relative 'district_repository'
 require_relative 'statewide_test'
 require 'csv'
 require 'pry'
@@ -6,11 +7,11 @@ class StatewideTestRepository
   attr_reader :statewidetests
 
   def load_data(args)
-    third_grade = args[0] #= args[:statewide_testing][:third_grade]
-    eighth_grade = args[1] #= args[:statewide_testing][:eighth_grade]
-    math = args[2]#= args[:statewide_testing][:math]
-    reading = args[3]#= args[:statewide_testing][:reading]
-    writing = args[4]#= args[:statewide_testing][:writing]
+    third_grade = args[:statewide_testing][:third_grade]
+    eighth_grade = args[:statewide_testing][:eighth_grade]
+    math = args[:statewide_testing][:math]
+    reading = args[:statewide_testing][:reading]
+    writing = args[:statewide_testing][:writing]
 
     third = school_test_scores(third_grade)
     eighth = school_test_scores(eighth_grade)
@@ -56,7 +57,7 @@ class StatewideTestRepository
     scores = district_names_as_hash_keys(file)
     collect_data(file).each do |row|
         if row[1] == race
-        scores[row[0]].store(row[2].to_i, {row[1] => row[4].to_f})
+        scores[row[0]].store(row[2].to_i, {row[1].downcase.to_sym => row[4].to_f})
         end
      end
       return scores
@@ -70,20 +71,20 @@ class StatewideTestRepository
     hispanic = getting_school_test_scores_by_race(file, "Hispanic")
     native_american = getting_school_test_scores_by_race(file, "Native American")
     two_or_more = getting_school_test_scores_by_race(file, "Two or more")
-    x = deep_merge(white, asian)
-    y = deep_merge(x, black)
-    z = deep_merge(y, hawaiian)
-    a = deep_merge(z, hispanic)
-    b = deep_merge(a, native_american)
-    c = deep_merge(b, two_or_more)
-      return c
+    wa= deep_merge(white, asian)
+    wab = deep_merge(wa, black)
+    wabh = deep_merge(wab, hawaiian)
+    wabhh = deep_merge(wabh, hispanic)
+    wabhhn = deep_merge(wabhh, native_american)
+    final_scores_by_race = deep_merge(wabhhn, two_or_more)
+      return final_scores_by_race
   end
 
   def getting_school_test_scores(file, subject)
     scores = district_names_as_hash_keys(file)
     collect_data(file).each do |row|
       if row[1] == subject
-        scores[row[0]].store(row[2].to_i, {row[1] => row[4].to_f})
+        scores[row[0]].store(row[2].to_i, {row[1].downcase.to_sym => row[4].to_f})
       end
     end
       return scores

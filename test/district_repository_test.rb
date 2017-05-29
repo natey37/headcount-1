@@ -8,12 +8,19 @@ class DistrictRepositoryTest < Minitest::Test
 
   def district_repository_instance
     dr = DistrictRepository.new
-    dr.load_data({
-      :enrollment => {
-        :kindergarten => "./data/Kindergartners in full-day program.csv",
-        :high_school_graduation => "./data/High school graduation rates.csv"
-      }
-      })
+  dr.load_data({
+    :enrollment => {
+      :kindergarten => "./data/Kindergartners in full-day program.csv",
+      :high_school_graduation => "./data/High school graduation rates.csv",
+    },
+    :statewide_testing => {
+      :third_grade => "./data/3rd grade students scoring proficient or above on the CSAP_TCAP.csv",
+      :eighth_grade => "./data/8th grade students scoring proficient or above on the CSAP_TCAP.csv",
+      :math => "./data/Average proficiency on the CSAP_TCAP by race_ethnicity_ Math.csv",
+      :reading => "./data/Average proficiency on the CSAP_TCAP by race_ethnicity_ Reading.csv",
+      :writing => "./data/Average proficiency on the CSAP_TCAP by race_ethnicity_ Writing.csv"
+    }
+  })
         return dr
   end
 
@@ -83,6 +90,27 @@ class DistrictRepositoryTest < Minitest::Test
                  0.659
     assert_nil district.enrollment.graduation_rate_in_year(2001),
                  nil
+  end
+
+  def test_statewide_test_is_connected_to_a_single_district
+    dr = DistrictRepository.new
+    dr.load_data({
+      :enrollment => {
+        :kindergarten => "./data/Kindergartners in full-day program.csv",
+        :high_school_graduation => "./data/High school graduation rates.csv",
+      },
+      :statewide_testing => {
+        :third_grade => "./data/3rd grade students scoring proficient or above on the CSAP_TCAP.csv",
+        :eighth_grade => "./data/8th grade students scoring proficient or above on the CSAP_TCAP.csv",
+        :math => "./data/Average proficiency on the CSAP_TCAP by race_ethnicity_ Math.csv",
+        :reading => "./data/Average proficiency on the CSAP_TCAP by race_ethnicity_ Reading.csv",
+        :writing => "./data/Average proficiency on the CSAP_TCAP by race_ethnicity_ Writing.csv"
+      }
+    })
+    district = dr.find_by_name("ACADEMY 20")
+
+    assert_equal district.statewide_test.class, StatewideTest
+    #statewide_test = district.statewide_test
   end
 
 end
