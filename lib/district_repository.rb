@@ -1,38 +1,36 @@
 require_relative 'district'
 require_relative 'enrollment'
 require_relative 'statewide_test_repository'
+require_relative 'enrollment_repository'
+require_relative 'economic_profile_repository'
 require 'csv'
 require 'pry'
 
 class DistrictRepository
-  attr_reader :districts, :district, :highschool_graduation,
-              :third_grade, :eighth_grade, :math, :writing,
-              :reading
+  attr_reader :districts
   def initialize()
 
   end
 
   def load_data(args)
-    @district = args[:enrollment][:kindergarten]
-    @highschool_graduation = args[:enrollment][:high_school_graduation]
-    @third_grade = args[:statewide_testing][:third_grade]
-    @eighth_grade = args[:statewide_testing][:eighth_grade]
-    @math = args[:statewide_testing][:math]
-    @writing = args[:statewide_testing][:writing]
-    @reading = args[:statewide_testing][:reading]
+    district = args[:enrollment][:kindergarten]
+
+    enrollment_for_school = EnrollmentRepository.new
+    enrollment_for_school.load_data(args)
     tests_for_school = StatewideTestRepository.new
-    tests_for_school.load_data([third_grade, eighth_grade,
-                                math, reading, writing])
+    tests_for_school.load_data(args)
+    economic_profiles_for_school = EconomicProfileRepository.new
+    economic_profiles_for_school.load_data(args)
+
     @districts = []
-    ke = kindergarten_enrollment
-    hg = highschool_graduation_rate
       district_names(district).each do |name|
           testing = tests_for_school.find_by_name(name)
+          enrollment = enrollment_for_school.find_by_name(name)
+          economics = economic_profiles_for_school.find_by_name(name)
           districts << District.new({:name => name},
-                         Enrollment.new(:name => name,
-                         :kindergarten_participation => ke[name],
-                         :high_school_graduation => hg[name]),
-                          testing)
+                                     enrollment,
+                                     testing,
+                                     economics)
        end
   end
   def collect_data(file)
@@ -43,30 +41,8 @@ class DistrictRepository
         return data
   end
 
-  def highschool_graduation_rate
-    making_hash_of_data(highschool_graduation)
-  end
-
   def district_names(file)
     collect_data(file).map{|row| row[0]}.uniq
-  end
-
-  def kindergarten_enrollment
-    making_hash_of_data(district)
-  end
-
-  def district_names_as_hash_keys(file)
-    names = {}
-    district_names(file).each{|name| names[name] = {}}
-      return names
-  end
-
-  def making_hash_of_data(file)
-      names_with_stats = district_names_as_hash_keys(file)
-      collect_data(file).each do |row|
-        names_with_stats[row[0]].store(row[1].to_i, row[3].to_f)
-      end
-        return names_with_stats
   end
 
   def find_by_name(name)
