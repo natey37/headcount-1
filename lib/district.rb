@@ -1,12 +1,13 @@
 require_relative 'enrollment'
 
 class District
-  attr_reader :name, :enrollment, :statewide_testing
+  attr_reader :name, :enrollment, :statewide_test, :economics
 
-  def initialize(hash, enrollment, testing)
+  def initialize(hash, enrollment, testing, economics)
     @name = hash[:name]
     @enrollment = enrollment
-    @statewide_testing = testing
+    @statewide_test = testing
+    @economics = economics
   end
 
   def name
