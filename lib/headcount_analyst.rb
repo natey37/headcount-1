@@ -1,5 +1,11 @@
 require_relative 'district_repository'
 
+class UnknownDataError < StandardError
+end
+
+class InsufficientInformationError < StandardError
+end
+
 class HeadCountAnalyst
   attr_reader :dr_instance
 
@@ -64,14 +70,13 @@ class HeadCountAnalyst
   end
 
   def kindergarten_participation_correlates_with_high_school_graduation(district_area)
-      if district_area[:for] == "STATEWIDE"
-        percentage_of_true(kinder_part_vs_hs_grad_by_district)
-      elsif district_area[:across].class == Array
-        percentage_of_true(kinder_part_vs_hs_grad_by_specific_districts(district_area[:across]))
-      else
-        within_correlation_range(kindergarten_participation_against_high_school_graduation(district_area[:for]))
-      end
-
+    if district_area[:for] == "STATEWIDE"
+      percentage_of_true(kinder_part_vs_hs_grad_by_district)
+    elsif district_area[:across].class == Array
+      percentage_of_true(kinder_part_vs_hs_grad_by_specific_districts(district_area[:across]))
+    else
+      within_correlation_range(kindergarten_participation_against_high_school_graduation(district_area[:for]))
+    end
   end
 
   def percentage_of_true(districts)
@@ -99,5 +104,127 @@ class HeadCountAnalyst
 
   def within_correlation_range(kinder_part_vs_hs_grad)
     kinder_part_vs_hs_grad > 0.6 && kinder_part_vs_hs_grad < 1.5 ? true : false
+  end
+
+  def top_statewide_test_year_over_year_growth(*args)
+    if args[0][:grade] != 8 && args[0][:grade] != 3
+      raise InsufficientInformationError
+    elsif args[0][:subject] == nil && args[0][:weighting] == nil
+      return sort_by_score(year_over_year_growth_for_all_subjects(
+               third_and_eighth_grade_scores(args))).first
+    elsif args[0][:weighting] != nil
+       return sort_by_score(year_over_year_growth_weighted(
+                third_and_eighth_grade_scores(args), args[0][:weighting])).first
+    else
+      if args[0][:top] != nil
+        return sort_by_score(year_over_year_growth(
+                 third_and_eighth_grade_scores(args),args[0][:subject]))
+                 [0...args[0][:top]]
+      else
+        return sort_by_score(year_over_year_growth(
+                 third_and_eighth_grade_scores(args), args[0][:subject])).first
+      end
+    end
+  end
+
+  def test_scores
+    test_scores = []
+      @dr_instance.districts.each do |d|
+          test_scores << d.statewide_test
+      end
+    test_scores.delete_at(0)
+      return test_scores
+  end
+
+  def third_and_eighth_grade_scores(*args)
+    specific_test_scores = []
+      test_scores.each do |district|
+        if args[0][0][:grade] == 3
+          specific_test_scores << [district.name, district.third_grade]
+        elsif args[0][0][:grade] == 8
+          specific_test_scores << [district.name, district.eighth_grade]
+        end
+      end
+        return specific_test_scores
+  end
+
+  def sort_by_score(scores)
+    scores.sort_by{|score| score[1]}.reverse
+  end
+
+  def calculate_scores(growth)
+    growth.map{|district| [district[0],
+      ((district[1].reduce(:+) / district[1].count))]}
+  end
+
+  def year_over_year_growth(scores, subject)
+    growth = []
+      scores.each_with_index do |year, idx|
+        subject_years = min_max_by_subject(scores[idx][1], subject)
+          subject_years = [2008, 2014] if subject_years == nil
+        growth << [scores[idx][0],
+                  ((scores[idx][1][subject_years[1]][subject] -
+                    scores[idx][1][subject_years[0]][subject]) /
+                    (subject_years[1] - subject_years[0])).round(3)]
+        end
+          return calculate_scores(growth)
+  end
+
+  def year_over_year_growth_weighted(scores, weighting)
+    growth = []
+      scores.each_with_index do |year, idx|
+        math_years = min_max_by_subject(scores[idx][1], :math)
+          math_years = [2008, 2014] if math_years == nil
+        reading_years = min_max_by_subject(scores[idx][1], :reading)
+          reading_years = [2008, 2014]  if reading_years == nil
+        writing_years = min_max_by_subject(scores[idx][1], :writing)
+          writing_years = [2008, 2014] if writing_years == nil
+        growth << [scores[idx][0],
+                  [(((scores[idx][1][math_years[1]][:math] -
+                      scores[idx][1][math_years[0]][:math]) /
+                      (math_years[1]-math_years[0])) * weighting[:math]),
+                      (((scores[idx][1][reading_years[1]][:reading] -
+                      scores[idx][1][reading_years[0]][:reading]) /
+                      (reading_years[1]-reading_years[0])) * weighting[:reading]),
+                      (((scores[idx][1][writing_years[1]][:writing] -
+                      scores[idx][1][writing_years[0]][:writing]) /
+                      (writing_years[1]-writing_years[0])) * weighting[:writing])]]
+        end
+          return growth.map{|district| [district[0], district[1].reduce(:+).round(3)]}
+  end
+
+  def year_over_year_growth_for_all_subjects(scores)
+    growth = []
+      scores.each_with_index do |year, idx|
+        math_years = min_max_by_subject(scores[idx][1], :math)
+          math_years = [2008, 2014] if math_years == nil
+        reading_years = min_max_by_subject(scores[idx][1], :reading)
+          reading_years = [2008, 2014] if reading_years == nil
+        writing_years = min_max_by_subject(scores[idx][1], :writing)
+          writing_years = [2008, 2014] if writing_years == nil
+        growth << [scores[idx][0],
+                  [((scores[idx][1][math_years[1]][:math] -
+                     scores[idx][1][math_years[0]][:math]) /
+                     (math_years[1] - math_years[0])),
+                     ((scores[idx][1][reading_years[1]][:reading] -
+                     scores[idx][1][reading_years[0]][:reading]) /
+                     (reading_years[1] - reading_years[0])),
+                     ((scores[idx][1][writing_years[1]][:writing] -
+                     scores[idx][1][writing_years[0]][:writing]) /
+                     (writing_years[1] - writing_years[0]))]]
+        end
+          return calculate_scores(growth)
+  end
+
+  def min_max_by_subject(hash, sub)
+    subject = hash.map{|year, subject| [year, subject[sub]]}
+    subject1 = subject.delete_if{|arr| arr[1] == 0}
+      if subject1.empty? || subject1.count == 1
+        return nil
+      else
+        max = subject1[-1][0]
+        min = subject1[0][0]
+          return [min, max]
+      end
   end
 end
